@@ -74,6 +74,12 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             .rememberMe()
                 .rememberMeParameter("remember-me")
                 .tokenValiditySeconds(300)
+                .and()
+            /*
+            모든 HTTP 요청을 HTTPS 요청으로 리다이렉트
+            */
+            .requiresChannel()
+                .anyRequest().requiresSecure()
             ;
     }
 }
