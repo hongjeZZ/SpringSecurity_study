@@ -67,6 +67,13 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .logoutSuccessUrl("/")
                 .invalidateHttpSession(true)
                 .clearAuthentication(true)
+                .and()
+            /*
+            쿠키 기반 자동 로그인 활성화
+            */
+            .rememberMe()
+                .rememberMeParameter("remember-me")
+                .tokenValiditySeconds(300)
             ;
     }
 }
