@@ -68,18 +68,19 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .invalidateHttpSession(true)
                 .clearAuthentication(true)
                 .and()
-            /*
-            쿠키 기반 자동 로그인 활성화
-            */
+            // 쿠키 기반 자동 로그인 활성화
             .rememberMe()
                 .rememberMeParameter("remember-me")
                 .tokenValiditySeconds(300)
                 .and()
-            /*
-            모든 HTTP 요청을 HTTPS 요청으로 리다이렉트
-            */
+            // 모든 HTTP 요청을 HTTPS 요청으로 리다이렉트
             .requiresChannel()
                 .anyRequest().requiresSecure()
+                .and()
+            // AnonymousAuthenticationFilter 세부 설정
+            .anonymous()
+                .principal("thisIsAnonymousUser")
+                .authorities("ROLE_ANONYMOUS", "ROLE_UNKNOWN")
             ;
     }
 }
