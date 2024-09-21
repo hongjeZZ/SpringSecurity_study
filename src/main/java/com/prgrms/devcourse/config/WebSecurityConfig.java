@@ -102,6 +102,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     public AccessDeniedHandler accessDeniedHandler() {
         return (request, response, e) -> {
+            /*
+            Authentication -> 인증 주체 즉, 사용자를 표현하는 객체
+            Authentication.getPrincipal() -> 인증 전, 인증 후 가리지 않고 사용자의 정보를 Object 타입으로 포괄적으로 표현
+            Authentication.isAuthenticated() -> 사용자가 인증되었는지 boolean 타입으로 확인 가능
+            */
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             Object principal = authentication != null ? authentication.getPrincipal() : null;
             log.warn("{} is denied", principal, e);
