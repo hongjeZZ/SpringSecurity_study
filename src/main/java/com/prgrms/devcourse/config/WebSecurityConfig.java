@@ -1,16 +1,25 @@
 package com.prgrms.devcourse.config;
 
+import javax.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
+
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     /*
     로그인 가능한 계정 추가
@@ -47,9 +56,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             /*
             spring security 는 "/me" 경로로 사용자가 들어왔을 때, "me" view 경로로 보내기 전 권한 여부를 파악하고
             스스로 login 페이지로 redirection 처리한다.
+            +) "/admin" 경로를 들어올 땐, 'ADMIN' 권한을 가지고 있고, isFullyAuthenticated() -> remember-me 기능 말고 로그인부터 시작해야함
             */
             .authorizeRequests()
                 .antMatchers("/me").hasAnyRole("USER", "ADMIN")
+                .antMatchers("/admin").access("hasRole('ADMIN') and isFullyAuthenticated()")
                 .anyRequest().permitAll()
                 .and()
             .formLogin()
@@ -81,6 +92,25 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             .anonymous()
                 .principal("thisIsAnonymousUser")
                 .authorities("ROLE_ANONYMOUS", "ROLE_UNKNOWN")
+                .and()
+            // 커스터마이징한 AccessDeniedHandler 추가
+            .exceptionHandling()
+                .accessDeniedHandler(accessDeniedHandler())
             ;
+    }
+
+    @Bean
+    public AccessDeniedHandler accessDeniedHandler() {
+        return (request, response, e) -> {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            Object principal = authentication != null ? authentication.getPrincipal() : null;
+            log.warn("{} is denied", principal, e);
+
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.setContentType("text/plain");
+            response.getWriter().write("## ACCESS DENIED ##");
+            response.getWriter().flush();
+            response.getWriter().close();
+        };
     }
 }
