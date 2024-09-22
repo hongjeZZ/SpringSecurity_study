@@ -1,12 +1,15 @@
 package com.prgrms.devcourse.config;
 
+import java.util.ArrayList;
+import java.util.List;
 import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.access.expression.SecurityExpressionHandler;
-import org.springframework.security.authentication.AuthenticationTrustResolverImpl;
+import org.springframework.security.access.AccessDecisionManager;
+import org.springframework.security.access.AccessDecisionVoter;
+import org.springframework.security.access.vote.UnanimousBased;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
@@ -15,8 +18,8 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.FilterInvocation;
 import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.access.expression.WebExpressionVoter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
@@ -47,8 +50,16 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         ;
     }
 
-    public SecurityExpressionHandler<FilterInvocation> securityExpressionHandler() {
-        return new CustomWebSecurityExpressionHandler(new AuthenticationTrustResolverImpl(), "ROLE_");
+//    public SecurityExpressionHandler<FilterInvocation> securityExpressionHandler() {
+//        return new CustomWebSecurityExpressionHandler(new AuthenticationTrustResolverImpl(), "ROLE_");
+//    }
+
+    public AccessDecisionManager accessDecisionManager() {
+        List<AccessDecisionVoter<?>> voters = new ArrayList<>();
+        voters.add(new WebExpressionVoter());
+        voters.add(new OddAdminVoter(new AntPathRequestMatcher("/admin")));
+
+        return new UnanimousBased(voters);
     }
 
     /*
@@ -71,9 +82,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             */
             .authorizeRequests()
                 .antMatchers("/me").hasAnyRole("USER", "ADMIN")
-                .antMatchers("/admin").access("hasRole('ADMIN') and isFullyAuthenticated() and oddAdmin")
+                .antMatchers("/admin").access("hasRole('ADMIN') and isFullyAuthenticated()")
                 .anyRequest().permitAll()
-                .expressionHandler(securityExpressionHandler())
+                .accessDecisionManager(accessDecisionManager())
+//                .expressionHandler(securityExpressionHandler())
                 .and()
             .formLogin()
                 .defaultSuccessUrl("/")
