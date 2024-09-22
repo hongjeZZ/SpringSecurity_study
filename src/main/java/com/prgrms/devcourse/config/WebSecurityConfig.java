@@ -92,6 +92,13 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .permitAll()
                 .and()
             /*
+            BasicAuthenticationFilter 설정 (default : 비활성화)
+            -> HTTP 요청 헤더에 username, password 를 Base64 인코딩하여 포함
+            -> Authorization: Basic dXNlcjp1c2VyMTIz
+            */
+            .httpBasic()
+                .and()
+            /*
             "/logout" 경로로 접근 시 로그아웃 실행, "/" 로그아웃 성공 시 리다이렉션
             invalidateHttpSession(true) -> 로그아웃 시 해당 사용자의 세션을 invalidate
             clearAuthentication(true) -> 로그아웃된 사용자의 SecurityContext 의 Authentication 을 null 로 초기화
