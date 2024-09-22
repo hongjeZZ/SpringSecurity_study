@@ -28,8 +28,8 @@ spring:
   sql:
     init:
       platform: h2
-      schema-locations: classpath:sql/schema.sql
-      data-locations: classpath:sql/data.sql
+      schema-locations: classpath:sql/schema_new.sql
+      data-locations: classpath:sql/data_new.sql
       encoding: UTF-8
 server:
   port: 443
