@@ -1,12 +1,16 @@
 package com.prgrms.devcourse.config;
 
+import com.prgrms.devcourse.config.custom.OddAdminVoter;
 import java.util.ArrayList;
 import java.util.List;
 import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.AsyncTaskExecutor;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.security.access.AccessDecisionVoter;
 import org.springframework.security.access.vote.UnanimousBased;
@@ -18,6 +22,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.task.DelegatingSecurityContextAsyncTaskExecutor;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.access.expression.WebExpressionVoter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
@@ -27,6 +32,43 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
+
+    /*
+    다른 Thread 에서도 SecurityContext 를 참조할 수 있게 설정
+    -> MODE_INHERITABLETHREADLOCAL (default -> MODE_THREADLOCAL)
+    -> SecurityContextHolderStrategy 인터페이스 구현체를 InheritableThreadLocalSecurityContextHolderStrategy 으로 변경
+    -> SecurityContext 저장 변수를 ThreadLocal 에서 InheritableThreadLocal 타입으로 변경
+    -> InheritableThreadLocal : 부모 Thread 가 생성한 ThreadLocal 변수를 자식 Thread 에서 참조 가능
+
+    하지만, Pooling  처리된 TaskExecutor 와 함께 사용 시 ThreadLocal 의 clear 처리가 제대로되지 않아 문제될 수 있음
+    (예 — ThreadPoolTaskExecutor)
+    이러한 경우, 아래 코드처럼 DelegatingSecurityContextAsyncTaskExecutor 를 구현
+     */
+//    public WebSecurityConfig() {
+//        SecurityContextHolder.setStrategyName(SecurityContextHolder.MODE_INHERITABLETHREADLOCAL);
+//    }
+
+
+    @Bean
+    @Qualifier(value = "myAsyncTaskExecutor")
+    public ThreadPoolTaskExecutor threadPoolTaskExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(3);
+        executor.setMaxPoolSize(5);
+        executor.setThreadNamePrefix("my-executor-");
+        return executor;
+    }
+
+    /*
+    DelegatingSecurityContextAsyncTaskExecutor 구현
+    객체 생성자에서 SecurityContextHolder.getContext() 메소드를 호출하여 SecurityContext 참조를 획득한다.
+    */
+    @Bean
+    public DelegatingSecurityContextAsyncTaskExecutor taskExecutor(
+            @Qualifier(value = "myAsyncTaskExecutor") AsyncTaskExecutor executor
+    ) {
+        return new DelegatingSecurityContextAsyncTaskExecutor(executor);
+    }
 
     /*
     로그인 가능한 계정 추가

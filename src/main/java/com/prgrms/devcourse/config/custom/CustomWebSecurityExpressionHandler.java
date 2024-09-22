@@ -1,4 +1,4 @@
-package com.prgrms.devcourse.config;
+package com.prgrms.devcourse.config.custom;
 
 import org.springframework.security.access.expression.AbstractSecurityExpressionHandler;
 import org.springframework.security.access.expression.SecurityExpressionOperations;

@@ -1,4 +1,4 @@
-package com.prgrms.devcourse.config;
+package com.prgrms.devcourse.config.custom;
 
 import static org.apache.commons.lang3.math.NumberUtils.toInt;
 
