@@ -108,10 +108,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     보통 정적인 페이지에 사용한다.
     지정된 antPath 경로에는 시큐리티 필터 체인을 태우지 않음. (전역 설정)
     필터는 다수의 필터로 구성되기 때문에 (비효율적인 이유), 불필요한 요청은 ignoring() 메서드를 통해 제외하도록 한다.
+    +) H2 데이터베이스 사용 시 DB를 connect 할 때, POST 요청을 보내게 되는데 CsrfFilter 가 작동하여 접근이 불가능해지니 ignoring()에 경로를 추가한다.
     */
     @Override
     public void configure(WebSecurity web) {
-        web.ignoring().antMatchers("/assets/**");
+        web.ignoring().antMatchers("/assets/**", "/h2-console/**");
     }
 
     @Override
