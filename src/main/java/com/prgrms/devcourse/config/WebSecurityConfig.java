@@ -56,7 +56,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             /*
             spring security 는 "/me" 경로로 사용자가 들어왔을 때, "me" view 경로로 보내기 전 권한 여부를 파악하고
             스스로 login 페이지로 redirection 처리한다.
-            +) "/admin" 경로를 들어올 땐, 'ADMIN' 권한을 가지고 있고, isFullyAuthenticated() -> remember-me 기능 말고 로그인부터 시작해야함
+            +) "/admin" 경로를 들어올 땐, 'ADMIN' 권한을 가지고 있고, isFullyAuthenticated() ->  명시적인 로그인 아이디/비밀번호 기반으로 인증된 사용자만 접근 가능
             */
             .authorizeRequests()
                 .antMatchers("/me").hasAnyRole("USER", "ADMIN")
@@ -79,10 +79,17 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .invalidateHttpSession(true)
                 .clearAuthentication(true)
                 .and()
-            // 쿠키 기반 자동 로그인 활성화
+            /*
+            쿠키 기반 자동 로그인 활성화
+            key — remember-me 쿠키에 대한 고유 식별 키 (미입력시 자동으로 랜덤 텍스트가 입력 됨)
+            rememberMeParameter — remember-me 쿠키 파라미터명 (기본값 remember-me)
+            tokenValiditySeconds — 쿠키 만료 시간 (초 단위)
+            alwaysRemember — 항상 remember-me 를 활성화 시킴 (기본값 false)
+            */
             .rememberMe()
                 .rememberMeParameter("remember-me")
                 .tokenValiditySeconds(300)
+                .alwaysRemember(false)
                 .and()
             // 모든 HTTP 요청을 HTTPS 요청으로 리다이렉트
             .requiresChannel()
